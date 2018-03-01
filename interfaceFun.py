@@ -41,29 +41,9 @@ numPadrescargados = 0
 tiempoEntreFunciones = 1000
 ultimoTiempoFuncion = 0
 
-#################### configuracion Modulo Comunicacion NRF24L01 ######################
-'''
-# RPi B2 - Setup for GPIO 22 CE and CE0 CSN for RPi B2 with SPI Speed @ 8Mhz
-radio = RF24(RPI_BPLUS_GPIO_J8_15, RPI_BPLUS_GPIO_J8_24, BCM2835_SPI_SPEED_8MHZ)
+#################### configuracion Modulo Comunicacion ESP ######################
 
-#puertos de comunicacion por defecto de escucha y de envio respectivamente
-pipes = [0xF0F0F0F0E1, 0xF0F0F0F0D2]
 
-print('Inicio: Inf: Iniciando modulo NRF24L01')
-radio.begin()
-radio.setPALevel(RF24_PA_LOW)
-radio.enableDynamicPayloads()
-radio.setRetries(2,5)
-radio.printDetails()
-
-radio.openReadingPipe(1,pipes[0])
-print('Inicio: Inf: Escuchando por direccion: {}'.format(pipes[0]))
-radio.openWritingPipe(pipes[1])
-print('Inicio: Inf: Enviando por direccion: {}'.format(pipes[1]))
-
-# Escuchamos si hay algun modulo publicandose (escribiendo por el canal de escucha por defecto)
-radio.startListening()
-'''
 #################### configuracion Comunicacion Serial ######################
 
 print('Inicio: Inf: Iniciando Recepcion Serial')
@@ -139,11 +119,6 @@ def escucharModulosNuevos():
 		if (mensajeS != ""):
 			procesarMensajeSerial(-1, mensajeS)
 
-		#mensajeN = recivirMensajeNrf24l01(pipes[0]) # leemos por la direccion de escucha por defecto
-		#if (mensajeN != ""):
-		#	pass
-			#procesarMensajeNrf24l01(-1, mensajeN, pipes[1], pipes[0])	# enviamos por la direccion de envio por defecto
-
 def revisarModulos():
 	global objetosPadresCargados, ultimaRevision, tiempoRespuestaObjetos
 
@@ -169,34 +144,6 @@ def revisarModulos():
 
 
 #################### Funciones - proceso de mensajes entrantes ####################
-'''
-def procesarMensajeNrf24l01(id, mensajeN, direcionModuloTx, direcionModuloRx):
-	global tiempoRespuestaObjetos
-
-	if(mensajeN[0:4] == "HOLA"):
-
-		# extraemos la direccion para responder
-		direcionModuloRecivida =  mensajeN[5:len(mensajeN)]
-		if(str(direcionModuloTx) != direcionModuloRecivida):
-			print("procesarMensajeNrf24l01: Inf: Cambiando Direccion Anterior \"{}\", por \"{}\"".format(direcionModuloTx,direcionModuloRecivida))
-			direcionModuloTx = direcionModuloRecivida
-
-		#enviamos mensaje de reconocimiento a esa direccion
-		enviarMensajeNRF24L01("HOLA-IDENTIFICATE",direcionModuloTx)
-
-	elif(mensajeN[0] == '{'): # procesamos el objeto json
-		resultado = procesarJsonObjeto(id,mensajeN, direcionModuloTx, direcionModuloRx)
-
-	elif(mensajeN == 'PONG'):
-
-		# actualizamos el ultimo momento en que el objeto respondio al PING (solo para objetos en base de datos o con id != -1)
-		if(id != -1):
-			tiempoRespuestaObjetos[id] = millis()
-			activarObjeto(id)
-
-	else:
-		pass
-'''
 def procesarMensajeSerial(id, mensajeS):
 	global tiempoRespuestaObjetos
 
@@ -355,51 +302,6 @@ def recivirMensajeNrf24l01(direccionRx):
 	return mensaje
 
 
-'''
-def recivirStringNrf24l01():
-	mensaje = recivirHasta32Nrf24l01()
-	numeroPaquetes = 0
-	# si enviaron paquetes
-	if (mensaje is not None and mensaje != "" and mensaje[0] == '-'):
-		numeroPaquetes = obtenerNumeroPaquetes(mensaje)		# son varios paquetes, obtengo el numero de paquetes
-	# preguntamos aunque deveria ser obio
-	if (numeroPaquetes > 0 ):
-		mensaje = ""       # limpiamos mensaje
-		contadorPaquetesRecibidos = 0
-		tiempoInicioMensaje = millis()
-		maximoTiempoEspera = 200     # lo que esperamos antes de cancelar el paquete
-		while (contadorPaquetesRecibidos < numeroPaquetes and millis() < (tiempoInicioMensaje + maximoTiempoEspera)):
-			# armamos el paquete
-			paqueteLeido = recivirHasta32Nrf24l01()
-			if (paqueteLeido != ""):
-				mensaje += paqueteLeido
-				contadorPaquetesRecibidos += 1
-				# fin while varios paquetes
-
-		# si el paquete no llego completo lo descartamos
-		if (contadorPaquetesRecibidos < numeroPaquetes):
-			print("Paquete Incompleto")
-			return ""
-		else:
-			return mensaje
-	# fin numero de paquetes mayor a 0
-	else:
-		return mensaje     #si no esta por paquetes, retornamos el mensaje recivido
-  	
-def recivirHasta32Nrf24l01():
-	radio.startListening()
-	# analizar luego del cambio
-	if radio.available():
-		while radio.available():
-			len = radio.getDynamicPayloadSize()
-			receive_payload = radio.read(len)
-			dato = receive_payload.decode('utf-8')
-			print('Recibido Nrf24l01: #{} {}'.format(len, dato))
-			return dato
-	return ""
-'''
-
-
 ################################################# Funciones - Envio de Informacion #################################################
 def enviarMensajeObjeto(idObjeto, mensaje):
 	# condicion para decididr por que medio parte el mensaje
@@ -413,92 +315,12 @@ def enviarMensajeObjeto(idObjeto, mensaje):
 
 
 #################### Funciones Envio de Mensajes ####################
-'''
-def enviarMensajeNRF24L01(mensaje, direcionModuloTx):
-	# nos comunicamos a travez del modulo NRF24L01
-	cambiarDireccionEnvioNrf24l01(direcionModuloTx)
-	tiempoReintentando = millis()
-	while (not(enviarStringNrf24l01(mensaje)) and millis() < tiempoReintentando + 100):
-		pass
-	radio.startListening()
-'''
 
 def enviarMensajeSerial(mensaje):
 	# nos comunicamos por serial
 	print("Enviando Serial  : #{} {}".format(len(mensaje),mensaje))
 	port.write(mensaje)
 	port.write("\n")
-
-
-#################### Funciones Auxiliares Envio Mensaje NRF24L01 ####################
-'''
-def enviarStringNrf24l01(mensaje):
-	#convertimos el string de salida a un arreglo de caracteres usado por radio.write
-	largoMensaje = len(mensaje)
-	numeroPaquetes  = largoMensaje // 32
-	if(largoMensaje % 32 > 0):
-		numeroPaquetes += 1
-	if (numeroPaquetes > 1):
-		print(" Lm: {} #P: {}".format(largoMensaje,numeroPaquetes))
-		# enviamos el paquete de inicio
-		enviarHasta32CharNrf24l01("-" + str(numeroPaquetes) + "-")
-
-		for i in range(numeroPaquetes):
-			fin  = (i + 1) * 32
-			if (fin >= largoMensaje):
-				fin = largoMensaje;   # para el ultimo paquete que no es de tamaño 32*i
-			paquete = mensaje[i * 32:fin]
-
-			tiempoInicioMensaje = millis()
-			maximoTiempoEspera = 100     # lo que esperamos antes de dejar de reenviar
-			while (not(enviarHasta32CharNrf24l01(paquete)) and millis() < (tiempoInicioMensaje + maximoTiempoEspera)):
-				pass 		# fin while reenvio
-			if (not(millis() < (tiempoInicioMensaje + maximoTiempoEspera))):
-				print("enviarStringNrf24l01: Err: Mensaje Cancelado, Fuera de Tiempo")
-				return False   # canselamos el envio del paquete
-	#fin for paquetes
-	else:
-		return enviarHasta32CharNrf24l01(mensaje)
-	# si se logra enviar el mensaje completo
-	return True
-
-def enviarHasta32CharNrf24l01(mensaje):
-	radio.stopListening()
-	enviado = radio.write(mensaje)
-	#radio.startListening()
-	# enviamos los datos
-	if(enviado):
-		print("Enviando Nrf24l01: #{} {} {}".format(len(mensaje),mensaje, "Exitoso"))
-	else:
-		print("Enviando Nrf24l01: #{} {} {}".format(len(mensaje),mensaje," Fallido"))
-	return enviado
-
-
-
-#################### Funciones Auxiliares Comunicacion NRF24L01 ####################
-def cambiarDireccionRecepcionNrf24l01(direccionRx):
-	#print("cambiarDireccionRecepcionNrf24l01: tiempo in:  {}".format(millis()))
-	if(direccionRx != None):
-		#pass
-		radio.openReadingPipe(1,int(direccionRx))
-		# activar espera para recepcion
-	#print("cambiarDireccionRecepcionNrf24l01: tiempo out: {}".format(millis()))
-
-def cambiarDireccionEnvioNrf24l01(direccionTx):
-	#print("cambiarDireccionEnvioNrf24l01: tiempo in {}".format(millis()))
-	if(direccionTx != None):
-		#pass
-		radio.openWritingPipe(int(direccionTx))
-	#print("cambiarDireccionEnvioNrf24l01: tiempo out {}".format(millis()))
-
-
-def obtenerNumeroPaquetes(numeroPaquetes):
-	numero = ""
-	for i in numeroPaquetes:
-		if (i != '-'):
-			numero += i
-	return int(numero)
-'''
 
 ################################################# Funciones - Eventos #################################################
 def informarEvento(mensaje):
