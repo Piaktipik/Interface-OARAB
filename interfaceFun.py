@@ -124,6 +124,7 @@ def escucharModulosGuardados():
 				#mensajeN = recivirMensajeNrf24l01(objPad.DireccionRx) # leemos a un modulo especifico y a la direccion por defecto
 				if (mensajeN != ""):
 					#procesarMensajeNrf24l01(objPad.id, mensajeN, objPad.DireccionTx, objPad.DireccionRx)
+					pass
 			else:
 				# nos comunicamos por serial
 				mensajeS = leerLineaSerial()
@@ -140,6 +141,7 @@ def escucharModulosNuevos():
 
 		#mensajeN = recivirMensajeNrf24l01(pipes[0]) # leemos por la direccion de escucha por defecto
 		if (mensajeN != ""):
+			pass
 			#procesarMensajeNrf24l01(-1, mensajeN, pipes[1], pipes[0])	# enviamos por la direccion de envio por defecto
 
 def revisarModulos():
@@ -405,6 +407,7 @@ def enviarMensajeObjeto(idObjeto, mensaje):
 
 	if(direcionModuloTx != None):
 		#enviarMensajeNRF24L01(mensaje, direcionModuloTx)
+		pass
 	else:
 		enviarMensajeSerial(mensaje)
 
