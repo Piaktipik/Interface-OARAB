@@ -14,7 +14,7 @@ eventlet.monkey_patch()
 
 # Librerias Auxiliares
 import time
-from RF24 import *
+#from RF24 import *
 import RPi.GPIO as GPIO
 import os
 import serial
@@ -42,7 +42,7 @@ tiempoEntreFunciones = 1000
 ultimoTiempoFuncion = 0
 
 #################### configuracion Modulo Comunicacion NRF24L01 ######################
-
+'''
 # RPi B2 - Setup for GPIO 22 CE and CE0 CSN for RPi B2 with SPI Speed @ 8Mhz
 radio = RF24(RPI_BPLUS_GPIO_J8_15, RPI_BPLUS_GPIO_J8_24, BCM2835_SPI_SPEED_8MHZ)
 
@@ -63,7 +63,7 @@ print('Inicio: Inf: Enviando por direccion: {}'.format(pipes[1]))
 
 # Escuchamos si hay algun modulo publicandose (escribiendo por el canal de escucha por defecto)
 radio.startListening()
-
+'''
 #################### configuracion Comunicacion Serial ######################
 
 print('Inicio: Inf: Iniciando Recepcion Serial')
@@ -121,9 +121,9 @@ def escucharModulosGuardados():
 		for objPad in objetosPadresCargados:
 
 			if objPad.DireccionTx != None:		# si el padre tiene direccion, es un modulo NRF24L01
-				mensajeN = recivirMensajeNrf24l01(objPad.DireccionRx) # leemos a un modulo especifico y a la direccion por defecto
+				#mensajeN = recivirMensajeNrf24l01(objPad.DireccionRx) # leemos a un modulo especifico y a la direccion por defecto
 				if (mensajeN != ""):
-					procesarMensajeNrf24l01(objPad.id, mensajeN, objPad.DireccionTx, objPad.DireccionRx)
+					#procesarMensajeNrf24l01(objPad.id, mensajeN, objPad.DireccionTx, objPad.DireccionRx)
 			else:
 				# nos comunicamos por serial
 				mensajeS = leerLineaSerial()
@@ -138,9 +138,9 @@ def escucharModulosNuevos():
 		if (mensajeS != ""):
 			procesarMensajeSerial(-1, mensajeS)
 
-		mensajeN = recivirMensajeNrf24l01(pipes[0]) # leemos por la direccion de escucha por defecto
+		#mensajeN = recivirMensajeNrf24l01(pipes[0]) # leemos por la direccion de escucha por defecto
 		if (mensajeN != ""):
-			procesarMensajeNrf24l01(-1, mensajeN, pipes[1], pipes[0])	# enviamos por la direccion de envio por defecto
+			#procesarMensajeNrf24l01(-1, mensajeN, pipes[1], pipes[0])	# enviamos por la direccion de envio por defecto
 
 def revisarModulos():
 	global objetosPadresCargados, ultimaRevision, tiempoRespuestaObjetos
@@ -167,6 +167,7 @@ def revisarModulos():
 
 
 #################### Funciones - proceso de mensajes entrantes ####################
+'''
 def procesarMensajeNrf24l01(id, mensajeN, direcionModuloTx, direcionModuloRx):
 	global tiempoRespuestaObjetos
 
@@ -193,7 +194,7 @@ def procesarMensajeNrf24l01(id, mensajeN, direcionModuloTx, direcionModuloRx):
 
 	else:
 		pass
-
+'''
 def procesarMensajeSerial(id, mensajeS):
 	global tiempoRespuestaObjetos
 
@@ -351,6 +352,8 @@ def recivirMensajeNrf24l01(direccionRx):
 		mensaje = recivirStringNrf24l01()
 	return mensaje
 
+
+'''
 def recivirStringNrf24l01():
 	mensaje = recivirHasta32Nrf24l01()
 	numeroPaquetes = 0
@@ -392,7 +395,7 @@ def recivirHasta32Nrf24l01():
 			print('Recibido Nrf24l01: #{} {}'.format(len, dato))
 			return dato
 	return ""
-
+'''
 
 
 ################################################# Funciones - Envio de Informacion #################################################
@@ -401,12 +404,13 @@ def enviarMensajeObjeto(idObjeto, mensaje):
 	direcionModuloTx = direccionTxObjeto(idObjeto)
 
 	if(direcionModuloTx != None):
-		enviarMensajeNRF24L01(mensaje, direcionModuloTx)
+		#enviarMensajeNRF24L01(mensaje, direcionModuloTx)
 	else:
 		enviarMensajeSerial(mensaje)
 
 
 #################### Funciones Envio de Mensajes ####################
+'''
 def enviarMensajeNRF24L01(mensaje, direcionModuloTx):
 	# nos comunicamos a travez del modulo NRF24L01
 	cambiarDireccionEnvioNrf24l01(direcionModuloTx)
@@ -414,7 +418,7 @@ def enviarMensajeNRF24L01(mensaje, direcionModuloTx):
 	while (not(enviarStringNrf24l01(mensaje)) and millis() < tiempoReintentando + 100):
 		pass
 	radio.startListening()
-
+'''
 
 def enviarMensajeSerial(mensaje):
 	# nos comunicamos por serial
@@ -424,6 +428,7 @@ def enviarMensajeSerial(mensaje):
 
 
 #################### Funciones Auxiliares Envio Mensaje NRF24L01 ####################
+'''
 def enviarStringNrf24l01(mensaje):
 	#convertimos el string de salida a un arreglo de caracteres usado por radio.write
 	largoMensaje = len(mensaje)
@@ -490,7 +495,7 @@ def obtenerNumeroPaquetes(numeroPaquetes):
 		if (i != '-'):
 			numero += i
 	return int(numero)
-
+'''
 
 ################################################# Funciones - Eventos #################################################
 def informarEvento(mensaje):
