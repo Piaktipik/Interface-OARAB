@@ -140,8 +140,8 @@ def escucharModulosNuevos():
 			procesarMensajeSerial(-1, mensajeS)
 
 		#mensajeN = recivirMensajeNrf24l01(pipes[0]) # leemos por la direccion de escucha por defecto
-		if (mensajeN != ""):
-			pass
+		#if (mensajeN != ""):
+		#	pass
 			#procesarMensajeNrf24l01(-1, mensajeN, pipes[1], pipes[0])	# enviamos por la direccion de envio por defecto
 
 def revisarModulos():
